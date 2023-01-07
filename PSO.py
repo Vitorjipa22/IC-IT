@@ -1,5 +1,3 @@
-
-
 import random
 import math    
 import copy    
@@ -123,7 +121,7 @@ def updating_gbest(particulas):
   
   resultados = [particula.erro for particula in particulas]
 
-  erro_min = np.min(resultados)
+
   arg_min = np.argmin(resultados)
 
   g_best = particulas[arg_min].X.copy()
@@ -142,7 +140,7 @@ def update_sistem(particulas ,min ,max ,w , c1, c2, parada, dim, pid_param):
 
   particulas = [Medidas.ISE(particula, pid_param) for particula in particulas]
 
-  g_best = updating_gbest(particulas, pid_param).copy()
+  g_best = updating_gbest(particulas).copy()
 
   while(True):
 
@@ -163,7 +161,7 @@ def update_sistem(particulas ,min ,max ,w , c1, c2, parada, dim, pid_param):
     erro_gbest = Medidas.ISE(g_best,pid_param)
 
     
-    gbest_it = updating_gbest(particulas,pid_param)
+    gbest_it = updating_gbest(particulas)
     erro_new_gbest = Medidas.ISE(gbest_it, pid_param)
 
     if erro_new_gbest < erro_gbest: 
@@ -193,4 +191,4 @@ def plot_pid(X,pid_param):
   erro.append(p2)
   erro.append(Medidas.Overshoot(X, pid_param))
 
-  pid.plot(y,erro, temp_plot = 0.25)
+  pid.plot(y,erro, temp_plot = 5.0)

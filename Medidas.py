@@ -14,24 +14,24 @@ def Pid(num, den, set_point):
   return pid
 
 
-def ISE(particula, pid_param):
+def ISE(particula, pid_param, alpha = 0.0):
   pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
 
   if type(particula) == list:
     try:
       _, erro, _ = pid.controller(particula[0],particula[1],particula[2])
-      erro = sum(erro ** 2)
+      erro = sum(erro ** 2) + (alpha * Overshoot(particula, pid_param))
       return erro
 
     except:
       particula = [round(i) for i in particula]
       _, erro, _ = pid.controller(particula[0],particula[1],particula[2])
-      erro = sum(erro ** 2)
+      erro = sum(erro ** 2) + (alpha * Overshoot(particula, pid_param))
       return erro
 
   else:
     _, particula.erro, _ = pid.controller(particula.X[0],particula.X[1],particula.X[2])
-    particula.erro = sum(particula.erro ** 2)
+    particula.erro = sum(particula.erro ** 2) + (alpha * float(Overshoot(particula, pid_param)))
     # print(f'particula.erro : {particula.erro:,.2f} posição: {particula.X} pbest {particula.pbest}' )
     return particula
 
@@ -128,3 +128,4 @@ def Overshoot(particula,pid_param):
   overshoot = np.max(Y)
 
   return overshoot
+
