@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from PID import PID
 import Medidas
 
-rnd = random.Random(100)
+rnd = random.Random()
 
 class Particula:
   def __init__(self, dim, mini, maxi):
@@ -16,16 +16,19 @@ class Particula:
     self.X = list()
     self.V = list()
     self.pbest = list()
+    self.gbest = list()
     self.I = 1.0
     self.erro = 0
-
+    self.erro_gbest = 0
+    
     # Criando valores de position, velocidade e melhor posição da particula (pbest)
 
     for i in range(dim):
       self.X.append((maxi[i] - mini[i]) * rnd.random() + mini[i])
       self.V.append((maxi[i] - mini[i]) * rnd.random() + mini[i])
 
-    self.pbest = copy.copy(self.X)
+    self.pbest = copy.deepcopy(self.X)
+  
 
 def Pid(num, den, set_point):  
   '''
@@ -111,7 +114,15 @@ def updating_improvement(particula ,pid):
   return particula
 
 
-def updating_gbest(particulas):
+def updating_gbest(particula, gbest, erro_gbest):
+  
+  particula.gbest = gbest
+  particula.erro_gbest = erro_gbest
+
+  return particula
+
+
+def finding_gbest(particulas):
   '''
   Função que atualiza o gbest, ou seje, o ponto 
   com o melhor resultado entre as particulas. O
@@ -129,18 +140,26 @@ def updating_gbest(particulas):
   return g_best
 
 
-def update_sistem(particulas ,min ,max ,w , c1, c2, parada, dim, pid_param):
+def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_param):
   '''
   Função responável por atualizar todo o sistemas
   do PSO
   '''
+
+  i = 0
+
   sem_melhoras = 0
     
   n_iter = 1
 
   particulas = [Medidas.ISE(particula, pid_param) for particula in particulas]
 
-  g_best = updating_gbest(particulas).copy()
+  g_best = finding_gbest(particulas).copy()
+  erro_gbest = Medidas.ISE(g_best,pid_param)
+
+  particulas = [updating_gbest(particula,g_best,erro_gbest) for particula in particulas]
+
+  sistema.append(copy.deepcopy(particulas))
 
   while(True):
 
@@ -161,19 +180,30 @@ def update_sistem(particulas ,min ,max ,w , c1, c2, parada, dim, pid_param):
     erro_gbest = Medidas.ISE(g_best,pid_param)
 
     
-    gbest_it = updating_gbest(particulas)
+    gbest_it = finding_gbest(particulas)
     erro_new_gbest = Medidas.ISE(gbest_it, pid_param)
 
     if erro_new_gbest < erro_gbest: 
+      print('alterou gbest')
       g_best = gbest_it
+      particulas = [updating_gbest(particula, g_best, erro_new_gbest) for particula in particulas]
 
     plot_pid(g_best,pid_param)
+
+    sistema.append(copy.deepcopy(particulas))
+
+    for j in range(i):
+      print(sistema[j][1].X)
 
     imp = [particula.I for particula in particulas]
 
     sem_melhoras = sem_melhoras + 1 if np.max(imp) < parada else 0
 
     n_iter += 1
+
+    i = i + 1
+
+  return sistema
 
 
 def plot_pid(X,pid_param):
