@@ -196,7 +196,7 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
     n_iter += 1
 
 
-  return sistema
+  return copy.deepcopy(sistema)
 
 
 def plot_pid(X,pid_param):
