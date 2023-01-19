@@ -146,8 +146,6 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
   do PSO
   '''
 
-  i = 0
-
   sem_melhoras = 0
     
   n_iter = 1
@@ -184,7 +182,6 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
     erro_new_gbest = Medidas.ISE(gbest_it, pid_param)
 
     if erro_new_gbest < erro_gbest: 
-      print('alterou gbest')
       g_best = gbest_it
       particulas = [updating_gbest(particula, g_best, erro_new_gbest) for particula in particulas]
 
@@ -192,16 +189,12 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
 
     sistema.append(copy.deepcopy(particulas))
 
-    for j in range(i):
-      print(sistema[j][1].X)
-
     imp = [particula.I for particula in particulas]
 
     sem_melhoras = sem_melhoras + 1 if np.max(imp) < parada else 0
 
     n_iter += 1
 
-    i = i + 1
 
   return sistema
 
