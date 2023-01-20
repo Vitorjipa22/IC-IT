@@ -16,7 +16,6 @@ class PID:
 
     self.G_s = ctl.tf(self.numerador, self.denominador)
     self.H_s = ctl.tf([1.],[1.])
-    self.C_s = ctl.tf([1], [1])
     self.T_s=ctl.feedback(self.G_s, self.H_s, sign=-1)
 
   def controller(self,P,I,D):

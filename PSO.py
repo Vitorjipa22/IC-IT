@@ -158,7 +158,6 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
   particulas = [updating_gbest(particula,g_best,erro_gbest) for particula in particulas]
 
   sistema.append(copy.deepcopy(particulas))
-  print(sistema[0][0].X[0])
 
   while(True):
 
@@ -215,4 +214,4 @@ def plot_pid(X,pid_param):
   erro.append(p2)
   erro.append(Medidas.Overshoot(X, pid_param))
 
-  pid.plot(y,erro, temp_plot = 5.0)
+  pid.plot(y,erro, temp_plot = 7.0)
