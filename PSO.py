@@ -1,8 +1,6 @@
 import random
-import math    
 import copy    
 import numpy as np
-import matplotlib.pyplot as plt
 from PID import PID
 import Medidas
 
@@ -132,7 +130,6 @@ def finding_gbest(particulas):
   
   resultados = [particula.erro for particula in particulas]
 
-
   arg_min = np.argmin(resultados)
 
   g_best = particulas[arg_min].X.copy()
@@ -203,15 +200,18 @@ def plot_pid(X,pid_param):
   erro = list()
 
   pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
-  y, _, _ = pid.controller(X[0],X[1],X[2])
+  y, _, T = pid.resposta_MF(X[0],X[1],X[2])
+
+  temp_plot = Medidas.Tempo_Acomodacao(pid_param, ma=True) + 0.5
+
   p1, p2 = Medidas.Tempo_Subida(X, pid_param)
 
-  erro.append(Medidas.ISE(X, pid_param))
-  erro.append(Medidas.IAE(X, pid_param))
-  erro.append(Medidas.ITSE(X, pid_param))
-  erro.append(Medidas.Tempo_Acomodacao(X, pid_param))
+  erro.append(Medidas.ISE(pid_param = pid_param, particula = X))
+  erro.append(Medidas.IAE(pid_param = pid_param, particula = X))
+  erro.append(Medidas.ITSE(pid_param = pid_param, particula = X))
+  erro.append(Medidas.Tempo_Acomodacao(pid_param = pid_param, particula = X))
   erro.append(p1)
   erro.append(p2)
-  erro.append(Medidas.Overshoot(X, pid_param))
+  erro.append(Medidas.Overshoot(pid_param = pid_param, particula = X))
 
-  pid.plot(y,erro, temp_plot = 7.0)
+  pid.plot_MF(y,erro,T,temp_plot = temp_plot)

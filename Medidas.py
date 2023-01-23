@@ -19,18 +19,18 @@ def ISE(particula, pid_param, alpha = 100.0):
 
   if type(particula) == list:
     try:
-      _, erro, _ = pid.controller(particula[0],particula[1],particula[2])
+      _, erro, _ = pid.resposta_MF(particula[0],particula[1],particula[2])
       erro = sum(erro ** 2) 
       return erro
 
     except:
       particula = [round(i) for i in particula]
-      _, erro, _ = pid.controller(particula[0],particula[1],particula[2])
+      _, erro, _ = pid.resposta_MF(particula[0],particula[1],particula[2])
       erro = sum(erro ** 2) 
       return erro
 
   else:
-    _, particula.erro, _ = pid.controller(particula.X[0],particula.X[1],particula.X[2])
+    _, particula.erro, _ = pid.resposta_MF(particula.X[0],particula.X[1],particula.X[2])
     particula.erro = sum(particula.erro ** 2) 
    
     return particula
@@ -41,19 +41,19 @@ def IAE(particula, pid_param):
 
   if type(particula) == list:
     try:
-      _, erro, _ = pid.controller(particula[0],particula[1],particula[2])
+      _, erro, _ = pid.resposta_MF(particula[0],particula[1],particula[2])
       erro = sum(abs(erro))
                  
       return erro
 
     except:
       particula = [round(i) for i in particula]
-      _, erro, _ = pid.controller(particula[0],particula[1],particula[2])
+      _, erro, _ = pid.resposta_MF(particula[0],particula[1],particula[2])
       erro = sum(abs(erro))
       return erro
 
   else:
-    _, particula.erro, _ = pid.controller(particula.X[0],particula.X[1],particula.X[2])
+    _, particula.erro, _ = pid.resposta_MF(particula.X[0],particula.X[1],particula.X[2])
     particula.erro = sum(abs(particula.erro))
     # print(f'particula.erro : {particula.erro:,.2f} posição: {particula.X} pbest {particula.pbest}' )
     return particula
@@ -65,42 +65,46 @@ def ITSE(particula, pid_param):
 
   if type(particula) == list:
     try:
-      _, erro, temp = pid.controller(particula[0],particula[1],particula[2])
+      _, erro, temp = pid.resposta_MF(particula[0],particula[1],particula[2])
       erro = sum(temp * (erro ** 2))
                  
       return erro
 
     except:
       particula = [round(i) for i in particula]
-      _, erro, temp = pid.controller(particula[0],particula[1],particula[2])
+      _, erro, temp = pid.resposta_MF(particula[0],particula[1],particula[2])
       erro = sum(temp * (erro ** 2))
       return erro
 
   else:
-    _, particula.erro, temp = pid.controller(particula.X[0],particula.X[1],particula.X[2])
+    _, particula.erro, temp = pid.resposta_MF(particula.X[0],particula.X[1],particula.X[2])
     particula.erro = sum(temp * (erro ** 2))
     # print(f'particula.erro : {particula.erro:,.2f} posição: {particula.X} pbest {particula.pbest}' )
     return particula
 
 
-def Tempo_Acomodacao(particula,pid_param):  
+def Tempo_Acomodacao( pid_param, particula = None, ma = False):
   pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
 
-  Y, _, T = pid.controller(particula[0],particula[1],particula[2])
+  if ma:
+    Y, T = pid.resposta_MA()
+    
+  else:
+    Y, _, T = pid.resposta_MF(particula[0],particula[1],particula[2])
 
   for i in range(len(Y)):
-    if Y[i] < 0.98 or Y[i] > 1.02:
+    if Y[i] > Y[-1] + 0.02 or Y[i] < Y[-1] - 0.02:
       last_point = i
 
   temp_acom = T[last_point]
-
+  
   return temp_acom
 
 
 def Tempo_Subida(particula,pid_param):  
   pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
 
-  Y, _, T = pid.controller(particula[0],particula[1],particula[2])
+  Y, _, T = pid.resposta_MF(particula[0],particula[1],particula[2])
   aux1, aux2 = False, False
 
   for i in range(len(Y)):
@@ -120,18 +124,22 @@ def Tempo_Subida(particula,pid_param):
   return T[point5],T[point95]
   
   
-def Overshoot(particula,pid_param):  
+def Overshoot(pid_param, particula = None, ma = False):  
   pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
 
-  if type(particula) == list:
-    try:
-      Y, _, T = pid.controller(particula[0],particula[1],particula[2])
-    
-    except:
-      particula = [round(i) for i in particula]
-  
+  if ma:
+    Y, _ = pid.resposta_MA()
+
   else:
-    Y, _, T = pid.controller(particula.X[0],particula.X[1],particula.X[2])
+    if type(particula) == list:
+      try:
+        Y, _, _ = pid.resposta_MF(particula[0],particula[1],particula[2])
+      
+      except:
+        particula = [round(i) for i in particula]
+    
+    else:
+      Y, _, _ = pid.resposta_MF(particula.X[0],particula.X[1],particula.X[2])
 
   overshoot = np.max(Y)
 
