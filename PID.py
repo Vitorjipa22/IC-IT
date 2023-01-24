@@ -16,6 +16,9 @@ class PID:
 
     self.G_s = ctl.tf(self.numerador, self.denominador)
     self.H_s = ctl.tf([1.],[1.])
+
+    self.T_ma, self.yout_ma = ctl.step_response(self.G_s, self.pontos_simu)
+    self.error = [self.set_point]*len(self.T_ma) - self.yout_ma
     
   def resposta_MF(self,P,I,D):
 
@@ -40,10 +43,6 @@ class PID:
     return self.yout_mf, self.error_mf, self.T_mf
 
   def resposta_MA(self):
-
-    self.T_ma, self.yout_ma = ctl.step_response(self.G_s, self.pontos_simu)
-
-    self.error = [self.set_point]*len(self.T_ma) - self.yout_ma
 
     return self.yout_ma, self.error, self.T_ma
 

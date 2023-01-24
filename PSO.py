@@ -85,7 +85,7 @@ def updating_velocity(particula ,w ,c1 ,c2 ,g_best,dim ):
   return particula
 
 
-def updating_pbest(particula, pid_param):
+def updating_pbest(particula, pid):
   '''
   Função que atualiza o pbest, ou seje, o ponto 
   com o melhor resultado entre todos os pontos ja
@@ -93,10 +93,10 @@ def updating_pbest(particula, pid_param):
   depende se o problema é de minimização ou maximização.
   '''
 
-  pid = Pid(pid_param[0], pid_param[1], set_point = pid_param[2])
+  # pid = Pid(pid_param[0], pid_param[1], set_point = pid_param[2])
 
 
-  if particula.erro < Medidas.Multi_erro(particula.pbest, pid_param):
+  if particula.erro < Medidas.Multi_erro(particula.pbest, pid):
     particula.pbest = particula.X.copy()
 
   return particula
@@ -142,14 +142,16 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
   do PSO
   '''
 
+  pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
+
   sem_melhoras = 0
     
   n_iter = 1
 
-  particulas = [Medidas.Multi_erro(particula, pid_param) for particula in particulas]
+  particulas = [Medidas.Multi_erro(particula, pid) for particula in particulas]
 
   g_best = finding_gbest(particulas).copy()
-  erro_gbest = Medidas.Multi_erro(g_best,pid_param)
+  erro_gbest = Medidas.Multi_erro(g_best,pid)
 
   particulas = [updating_gbest(particula,g_best,erro_gbest) for particula in particulas]
 
@@ -167,21 +169,21 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
 
     particulas = [updating_particle(particula, min, max,dim) for particula in particulas]
     particulas = [updating_velocity(particula,w,c1,c2,g_best,dim) for particula in particulas]
-    particulas = [Medidas.Multi_erro(particula, pid_param) for particula in particulas]
-    particulas = [updating_improvement(particula,pid_param) for particula in particulas]
-    particulas = [updating_pbest(particula,pid_param) for particula in particulas]
+    particulas = [Medidas.Multi_erro(particula, pid) for particula in particulas]
+    particulas = [updating_improvement(particula,pid) for particula in particulas]
+    particulas = [updating_pbest(particula,pid) for particula in particulas]
    
-    erro_gbest = Medidas.Multi_erro(g_best,pid_param)
+    erro_gbest = Medidas.Multi_erro(g_best,pid)
 
     
     gbest_it = finding_gbest(particulas)
-    erro_new_gbest = Medidas.Multi_erro(gbest_it, pid_param)
+    erro_new_gbest = Medidas.Multi_erro(gbest_it, pid)
 
     if erro_new_gbest < erro_gbest: 
       g_best = gbest_it
       particulas = [updating_gbest(particula, g_best, erro_new_gbest) for particula in particulas]
 
-    plot_pid(g_best,pid_param)
+    plot_pid(g_best,pid)
 
     sistema.append(copy.deepcopy(particulas))
 
@@ -194,22 +196,23 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
   return copy.deepcopy(sistema)
 
 
-def plot_pid(X,pid_param):
+def plot_pid(X,pid):
   erro = list()
 
-  pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
+  # pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
+
   y, _, T = pid.resposta_MF(X[0],X[1],X[2])
 
-  temp_plot = Medidas.Tempo_Acomodacao(pid_param, ma=True) + 0.5
+  temp_plot = Medidas.Tempo_Acomodacao(pid, ma=True) + 0.5
 
-  p1, p2 = Medidas.Tempo_Subida(X, pid_param)
+  p1, p2 = Medidas.Tempo_Subida(X, pid)
 
-  erro.append(Medidas.Multi_erro(pid_param = pid_param, particula = X))
-  erro.append(Medidas.IAE(pid_param = pid_param, particula = X))
-  erro.append(Medidas.ITSE(pid_param = pid_param, particula = X))
-  erro.append(Medidas.Tempo_Acomodacao(pid_param = pid_param, particula = X))
+  erro.append(Medidas.Multi_erro(pid = pid, particula = X))
+  erro.append(Medidas.IAE(pid = pid, particula = X))
+  erro.append(Medidas.ITSE(pid = pid, particula = X))
+  erro.append(Medidas.Tempo_Acomodacao(pid = pid, particula = X))
   erro.append(p1)
   erro.append(p2)
-  erro.append(Medidas.Overshoot(pid_param = pid_param, particula = X))
+  erro.append(Medidas.Overshoot(pid = pid, particula = X))
 
   pid.plot_MF(y,erro,T,temp_plot = temp_plot)
