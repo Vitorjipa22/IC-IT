@@ -14,12 +14,18 @@ def Pid(num, den, set_point):
   return pid
 
 
-def ISE(particula, pid_param, alpha = 100.0):
+def ISE(pid_param, particula = None, ma = False):
+  print(ma)
   pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
 
   if type(particula) == list:
-    try:
+    if ma:
+      _, erro, _ = pid.resposta_MA()
+
+    else:
       _, erro, _ = pid.resposta_MF(particula[0],particula[1],particula[2])
+
+    try:
       erro = sum(erro ** 2) 
       return erro
 
@@ -30,8 +36,13 @@ def ISE(particula, pid_param, alpha = 100.0):
       return erro
 
   else:
-    _, particula.erro, _ = pid.resposta_MF(particula.X[0],particula.X[1],particula.X[2])
-    particula.erro = sum(particula.erro ** 2) 
+    if ma:
+      print('entrou')
+      _, erro, _ = pid.resposta_MA()
+
+    else:
+      _, particula.erro, _ = pid.resposta_MF(particula.X[0],particula.X[1],particula.X[2])
+      particula.erro = sum(particula.erro ** 2) 
    
     return particula
 
@@ -85,12 +96,16 @@ def ITSE(particula, pid_param):
 
 def Tempo_Acomodacao( pid_param, particula = None, ma = False):
   pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
+  last_point = 0
 
   if ma:
-    Y, T = pid.resposta_MA()
+    Y,_, T = pid.resposta_MA()
     
   else:
-    Y, _, T = pid.resposta_MF(particula[0],particula[1],particula[2])
+    if type(particula) == list: 
+      Y, _, T = pid.resposta_MF(particula[0],particula[1],particula[2])
+    else:
+      Y, _, T = pid.resposta_MF(particula.X[0],particula.X[1],particula.X[2])
 
   for i in range(len(Y)):
     if Y[i] > Y[-1] + 0.02 or Y[i] < Y[-1] - 0.02:
@@ -128,7 +143,7 @@ def Overshoot(pid_param, particula = None, ma = False):
   pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
 
   if ma:
-    Y, _ = pid.resposta_MA()
+    Y, _, _ = pid.resposta_MA()
 
   else:
     if type(particula) == list:
@@ -145,4 +160,20 @@ def Overshoot(pid_param, particula = None, ma = False):
 
 
   return overshoot
+
+
+def Multi_erro(particula, pid_param):
+  pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
+
+  primeira_parcela = (Overshoot(pid_param, particula = particula) - 1)*5
+
+  segunda_parcela = Tempo_Acomodacao(pid_param, particula=particula)/Tempo_Acomodacao(pid_param,ma=True)
+  # print(particula.X)
+  terceira_parcela = ISE(pid_param, particula=particula)/ ISE(pid_param, ma = True)
+
+  erro = primeira_parcela + segunda_parcela + terceira_parcela
+
+  return erro
+
+
 

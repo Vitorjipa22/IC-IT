@@ -96,7 +96,7 @@ def updating_pbest(particula, pid_param):
   pid = Pid(pid_param[0], pid_param[1], set_point = pid_param[2])
 
 
-  if particula.erro < Medidas.ISE(particula.pbest, pid_param):
+  if particula.erro < Medidas.Multi_erro(particula.pbest, pid_param):
     particula.pbest = particula.X.copy()
 
   return particula
@@ -104,10 +104,10 @@ def updating_pbest(particula, pid_param):
 
 def updating_improvement(particula ,pid):
   
-  particula.I = Medidas.ISE(particula.pbest, pid) - Medidas.ISE(particula.X, pid)
+  particula.I = Medidas.Multi_erro(particula.pbest, pid) - Medidas.Multi_erro(particula.X, pid)
 
   # print(f'particula.I : {particula.I}')
-  # print(f'ise posição atual: {ISE(particula.X, pid_param)} , ise pbest {ISE(particula.pbest, pid_param)}')
+  # print(f'Multi_erro posição atual: {Multi_erro(particula.X, pid_param)} , Multi_erro pbest {Multi_erro(particula.pbest, pid_param)}')
 
   return particula
 
@@ -147,10 +147,10 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
     
   n_iter = 1
 
-  particulas = [Medidas.ISE(particula, pid_param) for particula in particulas]
+  particulas = [Medidas.Multi_erro(particula, pid_param) for particula in particulas]
 
   g_best = finding_gbest(particulas).copy()
-  erro_gbest = Medidas.ISE(g_best,pid_param)
+  erro_gbest = Medidas.Multi_erro(g_best,pid_param)
 
   particulas = [updating_gbest(particula,g_best,erro_gbest) for particula in particulas]
 
@@ -168,15 +168,15 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
 
     particulas = [updating_particle(particula, min, max,dim) for particula in particulas]
     particulas = [updating_velocity(particula,w,c1,c2,g_best,dim) for particula in particulas]
-    particulas = [Medidas.ISE(particula, pid_param) for particula in particulas]
+    particulas = [Medidas.Multi_erro(particula, pid_param) for particula in particulas]
     particulas = [updating_improvement(particula,pid_param) for particula in particulas]
     particulas = [updating_pbest(particula,pid_param) for particula in particulas]
    
-    erro_gbest = Medidas.ISE(g_best,pid_param)
+    erro_gbest = Medidas.Multi_erro(g_best,pid_param)
 
     
     gbest_it = finding_gbest(particulas)
-    erro_new_gbest = Medidas.ISE(gbest_it, pid_param)
+    erro_new_gbest = Medidas.Multi_erro(gbest_it, pid_param)
 
     if erro_new_gbest < erro_gbest: 
       g_best = gbest_it
@@ -206,7 +206,7 @@ def plot_pid(X,pid_param):
 
   p1, p2 = Medidas.Tempo_Subida(X, pid_param)
 
-  erro.append(Medidas.ISE(pid_param = pid_param, particula = X))
+  erro.append(Medidas.Multi_erro(pid_param = pid_param, particula = X))
   erro.append(Medidas.IAE(pid_param = pid_param, particula = X))
   erro.append(Medidas.ITSE(pid_param = pid_param, particula = X))
   erro.append(Medidas.Tempo_Acomodacao(pid_param = pid_param, particula = X))

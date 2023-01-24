@@ -40,12 +40,12 @@ class PID:
     return self.yout_mf, self.error_mf, self.T_mf
 
   def resposta_MA(self):
-    self.Ts=ctl.feedback(self.G_s, self.H_s, sign=-1)
-    self.T_ma, self.yout_ma = ctl.step_response(self.Ts, self.pontos_simu)
+
+    self.T_ma, self.yout_ma = ctl.step_response(self.G_s, self.pontos_simu)
 
     self.error = [self.set_point]*len(self.T_ma) - self.yout_ma
 
-    return self.yout_ma, self.T_ma
+    return self.yout_ma, self.error, self.T_ma
 
   def plot_MF(self, Y, erro, T, temp_plot = 20, figsize = (15,7), set_point = False):
 
