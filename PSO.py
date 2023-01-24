@@ -127,7 +127,6 @@ def finding_gbest(particulas):
   melhor resultado depende se o problema é de 
   minimização ou maximização.
   '''
-  
   resultados = [particula.erro for particula in particulas]
 
   arg_min = np.argmin(resultados)
@@ -191,7 +190,6 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
     sem_melhoras = sem_melhoras + 1 if np.max(imp) < parada else 0
 
     n_iter += 1
-
 
   return copy.deepcopy(sistema)
 

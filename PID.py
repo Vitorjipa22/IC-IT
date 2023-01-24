@@ -67,14 +67,14 @@ class PID:
     if temp_plot > erro[5]:
       plt.vlines(x = erro[5], ymin = 0, ymax = max(Y), colors = 'black', label = f'95% do setpoint', linewidth = 1.2, linestyle = ':')
 
-    plt.axhline(y = 1.02, color = 'b', linestyle = ':', label = 'Margens do tempo de acomodação')
-    plt.axhline(y = 0.98, color = 'b', linestyle = ':')
+    plt.axhline(y = Y[-1] + 0.02, color = 'b', linestyle = ':', label = 'Margens do tempo de acomodação')
+    plt.axhline(y = Y[-1] - 0.02, color = 'b', linestyle = ':')
     plt.axhline(y = erro[6], color = 'yellow', linestyle = ':', label = 'Overshoot')
 
     plt.grid(True,linewidth=0.4)
     plt.title('Controlador PID')
     
-    plt.text((pontos_pl*1.3)/len(self.pontos_simu),-0.045,f'P:{self.P:,.3f}      I:{self.I:,.3f}      D:{self.D:,.3f}      ISE {erro[0]:,.5f}      IAE {erro[1]:,.5f}      ITSE {erro[2]:,.5f}',fontsize = 12, fontname = 'monospace', color = '#3F9C6B')
+    plt.text((pontos_pl*1.3)/len(self.pontos_simu),-0.045,f'P:{self.P:,.3f}      I:{self.I:,.3f}      D:{self.D:,.3f}      ERRO:{erro[0]:,.5f}      IAE {erro[1]:,.5f}      ITSE {erro[2]:,.5f}',fontsize = 12, fontname = 'monospace', color = '#3F9C6B')
 
     if set_point:
       plt.plot(self.T_mf, [self.set_point]*len(self.T_mf), linewidth = 1.2, label = 'Setpoint')

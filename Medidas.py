@@ -15,7 +15,6 @@ def Pid(num, den, set_point):
 
 
 def ISE(pid_param, particula = None, ma = False):
-  print(ma)
   pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
 
   if type(particula) == list:
@@ -37,14 +36,15 @@ def ISE(pid_param, particula = None, ma = False):
 
   else:
     if ma:
-      print('entrou')
       _, erro, _ = pid.resposta_MA()
+      erro = sum(erro ** 2) 
+      return erro
 
     else:
       _, particula.erro, _ = pid.resposta_MF(particula.X[0],particula.X[1],particula.X[2])
       particula.erro = sum(particula.erro ** 2) 
    
-    return particula
+      return particula
 
 
 def IAE(particula, pid_param):
@@ -166,14 +166,26 @@ def Multi_erro(particula, pid_param):
   pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
 
   primeira_parcela = (Overshoot(pid_param, particula = particula) - 1)*5
-
+  # print("Primeira: ", primeira_parcela)
   segunda_parcela = Tempo_Acomodacao(pid_param, particula=particula)/Tempo_Acomodacao(pid_param,ma=True)
-  # print(particula.X)
-  terceira_parcela = ISE(pid_param, particula=particula)/ ISE(pid_param, ma = True)
+  # print("Segunda: ", segunda_parcela)
 
-  erro = primeira_parcela + segunda_parcela + terceira_parcela
+  if type(particula) == list:
+    terceira_parcela = ISE(pid_param, particula=particula) / ISE(pid_param, ma = True)
+    # print("Terceira: ", terceira_parcela)
+    erro = primeira_parcela + segunda_parcela + terceira_parcela
 
-  return erro
+    return erro
+  
+  else:
+    terceira_parcela = ISE(pid_param, particula=particula).erro / ISE(pid_param, ma = True)
+    # print("Terceira: ", terceira_parcela)
+    erro = primeira_parcela + segunda_parcela + terceira_parcela
+    particula.erro = erro
+
+    return particula
+
+
 
 
 
