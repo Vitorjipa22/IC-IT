@@ -105,7 +105,18 @@ class PID:
 
     plt.show()
 
-  
+  def set_ISE_MA(self, ISE_MA):
+    self.ISE_MA = ISE_MA
+
+  def get_ISE_MA(self):
+    return self.ISE_MA
+
+  def set_TACO_MA(self, TACO_MA):
+    self.TACO_MA = TACO_MA
+
+  def get_TACO_MA(self):
+    return self.TACO_MA
+
 if __name__ == "__main__":
     num = [16]
     den = [1,4,16]

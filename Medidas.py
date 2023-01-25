@@ -166,18 +166,18 @@ def Multi_erro(particula, pid):
 
   primeira_parcela = (Overshoot(pid, particula = particula) - 1)*5
   # print("Primeira: ", primeira_parcela)
-  segunda_parcela = Tempo_Acomodacao(pid, particula=particula)/Tempo_Acomodacao(pid,ma=True)
+  segunda_parcela = Tempo_Acomodacao(pid, particula=particula)/pid.get_TACO_MA()
   # print("Segunda: ", segunda_parcela)
 
   if type(particula) == list:
-    terceira_parcela = ISE(pid, particula=particula) / ISE(pid, ma = True)
+    terceira_parcela = ISE(pid, particula=particula) / pid.get_ISE_MA()
     # print("Terceira: ", terceira_parcela)
     erro = (primeira_parcela + segunda_parcela + terceira_parcela)/3
 
     return erro
   
   else:
-    terceira_parcela = ISE(pid, particula=particula).erro / ISE(pid, ma = True)
+    terceira_parcela = ISE(pid, particula=particula).erro / pid.get_ISE_MA()
     # print("Terceira: ", terceira_parcela)
     erro = (primeira_parcela + segunda_parcela + terceira_parcela)/3
     particula.erro = erro

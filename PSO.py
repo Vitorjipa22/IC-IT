@@ -3,21 +3,23 @@ import copy
 import numpy as np
 from PID import PID
 import Medidas
+import time
+import numpy
 
 rnd = random.Random()
 
 class Particula:
   def __init__(self, dim, mini, maxi):
     # definindo semente de aleatoriedade
-    global rnd
 
     self.X = list()
     self.V = list()
     self.pbest = list()
     self.gbest = list()
-    self.I = 1.0
+    self.I = 0
     self.erro = 0
     self.erro_gbest = 0
+    
     
     # Criando valores de position, velocidade e melhor posição da particula (pbest)
 
@@ -26,15 +28,12 @@ class Particula:
       self.V.append((maxi[i] - mini[i]) * rnd.random() + mini[i])
 
     self.pbest = copy.deepcopy(self.X)
+    self.erro_pbest = 0
   
 
 def Pid(num, den, set_point):  
-  '''
-  Esta funçao cria um PID com determinados parametros
-  e devolve varios tipos de erro
-  '''
- 
-  #instancia o PID
+  # Esta funçao instacia um PID com determinados parametros
+
   pid = PID(num = num,den = den, set_point = set_point)
 
   return pid
@@ -85,7 +84,7 @@ def updating_velocity(particula ,w ,c1 ,c2 ,g_best,dim ):
   return particula
 
 
-def updating_pbest(particula, pid):
+def updating_pbest(particula, ini = False):
   '''
   Função que atualiza o pbest, ou seje, o ponto 
   com o melhor resultado entre todos os pontos ja
@@ -93,21 +92,20 @@ def updating_pbest(particula, pid):
   depende se o problema é de minimização ou maximização.
   '''
 
-  # pid = Pid(pid_param[0], pid_param[1], set_point = pid_param[2])
+  if ini:
+    particula.erro_pbest = particula.erro
 
-
-  if particula.erro < Medidas.Multi_erro(particula.pbest, pid):
-    particula.pbest = particula.X.copy()
+  else:
+    if particula.erro < particula.erro_pbest:
+      particula.pbest = particula.X.copy()
+      particula.erro_pbest = particula.erro
 
   return particula
 
 
-def updating_improvement(particula ,pid):
+def updating_improvement(particula):
   
-  particula.I = Medidas.Multi_erro(particula.pbest, pid) - Medidas.Multi_erro(particula.X, pid)
-
-  # print(f'particula.I : {particula.I}')
-  # print(f'Multi_erro posição atual: {Multi_erro(particula.X, pid_param)} , Multi_erro pbest {Multi_erro(particula.pbest, pid_param)}')
+  particula.I = particula.erro_pbest - particula.erro
 
   return particula
 
@@ -143,39 +141,44 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
   '''
 
   pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
+  tempo = list()
+
+  ISE_MA = Medidas.ISE(pid, ma=True)
+  TACO_MA = Medidas.Tempo_Acomodacao(pid, ma=True)
+
+  pid.set_ISE_MA(ISE_MA)
+  pid.set_TACO_MA(TACO_MA)
+
 
   sem_melhoras = 0
-    
   n_iter = 1
 
   particulas = [Medidas.Multi_erro(particula, pid) for particula in particulas]
+  particulas = [updating_pbest(particula, ini=True) for particula in particulas]
 
   g_best = finding_gbest(particulas).copy()
   erro_gbest = Medidas.Multi_erro(g_best,pid)
 
   particulas = [updating_gbest(particula,g_best,erro_gbest) for particula in particulas]
-
   sistema.append(copy.deepcopy(particulas))
 
   while(True):
+    ini = time.time()
 
-    if (sem_melhoras > 0):
-      print(f"\nSem melhoras á {sem_melhoras} iterações\n")
 
     if (sem_melhoras == 5):
-      print(f'< Critério de parada atingido, o sistemas não teve melhoras significativas a 5 iterações. >')
+      print(f'< Critério de parada atinigido, nenhuma particula teve uma melhora maior que {parada} por 5 iterações consecutivas. >')
       print(f'< {n_iter} iterações antes de atingir o critério. >')
+      print(f'< O tempo médio das iterações foi {round(numpy.mean(tempo), 3)}s. >')
       break
 
     particulas = [updating_particle(particula, min, max,dim) for particula in particulas]
     particulas = [updating_velocity(particula,w,c1,c2,g_best,dim) for particula in particulas]
     particulas = [Medidas.Multi_erro(particula, pid) for particula in particulas]
-    particulas = [updating_improvement(particula,pid) for particula in particulas]
-    particulas = [updating_pbest(particula,pid) for particula in particulas]
-   
-    erro_gbest = Medidas.Multi_erro(g_best,pid)
+    particulas = [updating_improvement(particula) for particula in particulas]
+    particulas = [updating_pbest(particula) for particula in particulas]
 
-    
+    erro_gbest = Medidas.Multi_erro(g_best,pid)
     gbest_it = finding_gbest(particulas)
     erro_new_gbest = Medidas.Multi_erro(gbest_it, pid)
 
@@ -193,13 +196,15 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
 
     n_iter += 1
 
+    fim = time.time()
+    tempo.append(fim-ini)
+    
+
   return copy.deepcopy(sistema)
 
 
 def plot_pid(X,pid):
   erro = list()
-
-  # pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
 
   y, _, T = pid.resposta_MF(X[0],X[1],X[2])
 
