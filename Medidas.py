@@ -170,7 +170,9 @@ def Multi_erro(particula, pid):
   # print("Segunda: ", segunda_parcela)
 
   if type(particula) == list:
-    terceira_parcela = ISE(pid, particula=particula) / pid.get_ISE_MA()
+    ise = ISE(pid, particula=particula)
+    print(ise)
+    terceira_parcela = ise / pid.get_ISE_MA()
     # print("Terceira: ", terceira_parcela)
     erro = (primeira_parcela + segunda_parcela + terceira_parcela)/3
 

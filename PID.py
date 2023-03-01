@@ -137,7 +137,7 @@ if __name__ == "__main__":
 
     # pid para exemplo de plot em maha aberta
 
-    Y, T = pid.resposta_MA()
+    Y,E, T = pid.resposta_MA()
 
-    pid.plot_MA(Y, T)
+    pid.plot_MA(Y, T, erro=E)
 
