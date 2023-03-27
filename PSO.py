@@ -180,11 +180,13 @@ def update_sistem(sistema, particulas, w, c1, c2, parada, pid_param):
   particulas = [updating_gbest(particula,g_best,erro_gbest) for particula in particulas]
   sistema.append(copy.deepcopy(particulas))
 
+  plot_pid(g_best, pid, n_iter)
+
   while(True):
     ini = time.time()
 
     if (sem_melhoras == 5):
-      plot_pid(g_best, pid, fim = True)
+      plot_pid(g_best, pid, save = True)
       print('Kp: ',g_best[0])
       print('Ti: ',g_best[1])
       print('Td: ',g_best[2])
@@ -209,15 +211,15 @@ def update_sistem(sistema, particulas, w, c1, c2, parada, pid_param):
       g_best = gbest_it
       particulas = [updating_gbest(particula, g_best, erro_new_gbest) for particula in particulas]
 
-    plot_pid(g_best,pid)
+    n_iter += 1
+
+    plot_pid(g_best, pid, n_iter)
 
     sistema.append(copy.deepcopy(particulas))
 
     imp = [particula.I for particula in particulas]
 
     sem_melhoras = sem_melhoras + 1 if np.max(imp) < parada else 0
-
-    n_iter += 1
 
     fim = time.time()
     tempo.append(fim-ini)
@@ -226,7 +228,7 @@ def update_sistem(sistema, particulas, w, c1, c2, parada, pid_param):
   return copy.deepcopy(sistema)
 
 
-def plot_pid(X, pid, fim = False):
+def plot_pid(X, pid, i, save = True):
   erro = list()
 
   y, _, _, _, _, T = pid.resposta_MF(X[0],X[1],X[2])
@@ -243,4 +245,4 @@ def plot_pid(X, pid, fim = False):
   erro.append(p2)
   erro.append(Medidas.Overshoot(pid = pid, particula = X))
 
-  pid.plot_MF(y, erro, T, temp_plot = temp_plot, fim=fim)
+  pid.plot_MF(y, erro, T, i, temp_plot = temp_plot, save=save)

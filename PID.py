@@ -71,7 +71,7 @@ class PID:
 
     return self.yout_ma, self.error, self.T_ma
 
-  def plot_MF(self, Y, erro, T, temp_plot = 20, figsize = (15,7), set_point = False, fim = False):
+  def plot_MF(self, Y, erro, T, i, temp_plot = 20, figsize = (15,7), set_point = False, save = True):
 
     
     pontos_pl = int((temp_plot * len(self.pontos_simu))/(self.temp_simu))
@@ -104,8 +104,8 @@ class PID:
       plt.plot(self.T_mf, [self.set_point]*len(self.T_mf), linewidth = 1.2, label = 'Setpoint')
 
     plt.legend(loc = 'center right')
-    if fim:
-      plt.savefig('gbest.png')
+    if save:
+      plt.savefig('resultados\gbest' + str(i) + '.png')
     plt.show()
 
   def plot_MA(self, Y, T, erro):
@@ -129,7 +129,7 @@ class PID:
 
     plt.grid(True,linewidth=0.4)
     plt.title('Controlador PID')
-
+    plt.savefig('resultados\malha_aberta.png')
     plt.show()
 
   def set_ISE_MA(self, ISE_MA):

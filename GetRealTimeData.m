@@ -13,7 +13,6 @@
 % gama = 1/8;
 % num = 16;
 % den = [1 4 16];
-
 sim('psopid');
 
 out = ans.simout;

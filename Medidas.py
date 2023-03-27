@@ -1,6 +1,5 @@
 import numpy as np
 from PID import PID
-from time import time
 import numpy as np
 
 
@@ -91,7 +90,6 @@ def ITAE(particula, pid):
   
 
 def Tempo_Acomodacao( pid, particula = None, ma = False):
-  # pid = Pid(pid[0],pid[1],set_point = pid[2])
   last_point = 0
 
   if ma:
@@ -108,14 +106,11 @@ def Tempo_Acomodacao( pid, particula = None, ma = False):
       last_point = i
 
   temp_acom = T[last_point]
-
   
   return temp_acom
 
 
 def Tempo_Subida(particula,pid):  
-  # pid = Pid(pid[0],pid[1],set_point = pid[2])
-
   Y, _, _, _, _, T = pid.resposta_MF(particula[0],particula[1],particula[2])
   aux1, aux2 = False, False
 
@@ -128,11 +123,6 @@ def Tempo_Subida(particula,pid):
       point95 = i-1
       aux2 = True
 
-  temp_subida = T[point95] - T[point5]
-  # print(T[point5])
-  # print(T[point95])
-
-  #return T[point95] - T[point5]
   return T[point5],T[point95]
   
   
@@ -160,48 +150,41 @@ def Overshoot(pid, particula = None, ma = False):
 
 def Multi_erro(particula, pid):
 
-  # primeira_parcela = (Overshoot(pid, particula = particula) - 1)*20
   primeira_parcela = (Overshoot(pid, particula = particula) - 1)
-  print('primeira_parcela (overshooting): ',primeira_parcela)
+  # print('primeira_parcela (overshooting): ',primeira_parcela)
 
-  # segunda_parcela = (Tempo_Acomodacao(pid, particula=particula)/pid.get_TACO_MA())*0.5
   segunda_parcela = (Tempo_Acomodacao(pid, particula=particula))
-  print('segunda_parcela (acomodação)',segunda_parcela)
+  # print('segunda_parcela (acomodação)',segunda_parcela)
 
   quarta_parcela = abs(erro_novo(pid, particula))
-  print('quarta parcela (ultimo erro)',quarta_parcela)
-
 
   if type(particula) == list:
     ise = ISE(pid, particula=particula)
     terceira_parcela = ise / (pid.get_ISE_MA())
     quinta_parcela = ITSE(particula, pid)
-    print('quinta parcela (ITSE)',quinta_parcela)
-
-    print('Terceira parcela (ISE)',terceira_parcela)
+    # print('Terceira parcela (ISE)',terceira_parcela)
+    # print('quarta parcela (ultimo erro)',quarta_parcela)
+    # print('quinta parcela (ITSE)',quinta_parcela)
 
     erro = (primeira_parcela + segunda_parcela + terceira_parcela + quarta_parcela + quinta_parcela)/5
-    # erro = terceira_parcela
 
     return erro
   
   else:
     ise = ISE(pid, particula=particula).erro
     quinta_parcela = ITSE(particula, pid).erro
-    print('quinta parcela (ITSE)',quinta_parcela)
+    # print('Terceira parcela (ISE)',terceira_parcela)
+    # print('quarta parcela (ultimo erro)',quarta_parcela)
+    # print('quinta parcela (ITSE)',quinta_parcela)
 
     terceira_parcela = ise / (pid.get_ISE_MA())
     erro = (primeira_parcela + segunda_parcela + terceira_parcela)/3
-    # erro = terceira_parcela
-
-    print('Terceira parcela (ISE)',terceira_parcela)
     
     particula.erro = erro
 
     return particula
-  
-  print('----------------------------------')
-  
+
+
 def erro_novo(pid, particula):
 
   if type(particula) == list:
