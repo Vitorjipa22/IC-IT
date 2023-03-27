@@ -9,7 +9,7 @@ import numpy
 rnd = random.Random()
 
 class Particula:
-  def __init__(self, dim, mini, maxi):
+  def __init__(self, j):
     # definindo semente de aleatoriedade
 
     self.X = list()
@@ -20,59 +20,78 @@ class Particula:
     self.erro = 0
     self.erro_gbest = 0
     
-    
     # Criando valores de position, velocidade e melhor posição da particula (pbest)
 
-    for i in range(dim):
-      self.X.append((maxi[i] - mini[i]) * rnd.random() + mini[i])
-      self.V.append((maxi[i] - mini[i]) * rnd.random() + mini[i])
+    for i in range(3):
+      if j < 2:
+        self.X.append(rnd.random())
+        # self.V.append((maxi[i] - mini[i]) * rnd.random() + mini[i])
+        self.V.append(0)
 
+      if j >= 2 and j< 5:
+        self.X.append((rnd.random()*9)+1)
+        # self.V.append((maxi[i] - mini[i]) * rnd.random() + mini[i])
+        self.V.append(0)
+
+      if j >= 5 and j< 7:
+        self.X.append((rnd.random()*40)+10)
+        # self.V.append((maxi[i] - mini[i]) * rnd.random() + mini[i])
+        self.V.append(0)
+      
+      if j >= 7 and j< 10:
+        self.X.append((rnd.random()*50)+50)
+        # self.V.append((maxi[i] - mini[i]) * rnd.random() + mini[i])
+        self.V.append(0)
+
+    print('particula aleatoria',self.X)
     self.pbest = copy.deepcopy(self.X)
     self.erro_pbest = 0
   
 
-def Pid(num, den, set_point):  
+def Pid(num, den):  
   # Esta funçao instacia um PID com determinados parametros
 
-  pid = PID(num = num,den = den, set_point = set_point)
+  pid = PID(num = num,den = den)
 
   return pid
 
 
-def inicializate(n_part, dim, min, max):
+def inicializate(n_part):
   '''
   incializa as particulas com valores aleatórios
   entre o minimo e o maximo determinado
   '''
 
-  particulas = [Particula( dim, min, max) for i in range(n_part)]
+  print('<- particulas geradas aleatóriamente ->')
+
+  particulas = [Particula(i) for i in range(n_part)]
 
   return particulas
 
 
-def updating_particle(particula ,min ,max, dim):
+def updating_particle(particula):
   '''
   Função que atualiza a posição da particula
   '''
-  for i in range(dim):
+  for i in range(3):
     particula.X[i] = particula.X[i] + particula.V[i]
 
-    if particula.X[i] > max[i]:
-      particula.X[i] = max[i]
+    # if particula.X[i] > max[i]:
+    #   particula.X[i] = max[i]
 
-    elif particula.X[i] < min[i]:
-      particula.X[i] = min[i]
+    if particula.X[i] < 0.001:
+      particula.X[i] = 0.001
     
   return particula
 
 
-def updating_velocity(particula ,w ,c1 ,c2 ,g_best,dim ):
+def updating_velocity(particula, w, c1, c2, g_best):
   '''
   Função que atualiza a velocidade da particula
   '''
   rnd = random.Random(100)
   
-  for i in range(dim):
+  for i in range(3):
     prim = w*particula.V[i]
     seg =  c1*rnd.random()*(particula.pbest[i] - particula.X[i])
     terc = c2*rnd.random()*(g_best[i]-particula.X[i])
@@ -134,13 +153,13 @@ def finding_gbest(particulas):
   return g_best
 
 
-def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_param):
+def update_sistem(sistema, particulas, w, c1, c2, parada, pid_param):
   '''
   Função responável por atualizar todo o sistemas
   do PSO
   '''
 
-  pid = Pid(pid_param[0],pid_param[1],set_point = pid_param[2])
+  pid = Pid(pid_param[0], pid_param[1])
   tempo = list()
 
   ISE_MA = Medidas.ISE(pid, ma=True)
@@ -148,7 +167,6 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
 
   pid.set_ISE_MA(ISE_MA)
   pid.set_TACO_MA(TACO_MA)
-
 
   sem_melhoras = 0
   n_iter = 1
@@ -165,15 +183,20 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
   while(True):
     ini = time.time()
 
-
     if (sem_melhoras == 5):
+      plot_pid(g_best, pid, fim = True)
+      print('Kp: ',g_best[0])
+      print('Ti: ',g_best[1])
+      print('Td: ',g_best[2])
       print(f'< Critério de parada atinigido, nenhuma particula teve uma melhora maior que {parada} por 5 iterações consecutivas. >')
       print(f'< {n_iter} iterações antes de atingir o critério. >')
       print(f'< O tempo médio das iterações foi {round(numpy.mean(tempo), 3)}s. >')
       break
-
-    particulas = [updating_particle(particula, min, max,dim) for particula in particulas]
-    particulas = [updating_velocity(particula,w,c1,c2,g_best,dim) for particula in particulas]
+      
+    # print('iterações sem melhorar: ',sem_melhoras)
+    particulas = [updating_velocity(particula,w,c1,c2,g_best) for particula in particulas]
+    particulas = [updating_particle(particula) for particula in particulas]
+    # particulas = [updating_velocity(particula,w,c1,c2,g_best,dim) for particula in particulas]
     particulas = [Medidas.Multi_erro(particula, pid) for particula in particulas]
     particulas = [updating_improvement(particula) for particula in particulas]
     particulas = [updating_pbest(particula) for particula in particulas]
@@ -182,7 +205,7 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
     gbest_it = finding_gbest(particulas)
     erro_new_gbest = Medidas.Multi_erro(gbest_it, pid)
 
-    if erro_new_gbest < erro_gbest: 
+    if erro_new_gbest < erro_gbest:
       g_best = gbest_it
       particulas = [updating_gbest(particula, g_best, erro_new_gbest) for particula in particulas]
 
@@ -203,10 +226,10 @@ def update_sistem(sistema,particulas ,min ,max ,w , c1, c2, parada, dim, pid_par
   return copy.deepcopy(sistema)
 
 
-def plot_pid(X,pid):
+def plot_pid(X, pid, fim = False):
   erro = list()
 
-  y, _, T = pid.resposta_MF(X[0],X[1],X[2])
+  y, _, _, _, _, T = pid.resposta_MF(X[0],X[1],X[2])
 
   temp_plot = Medidas.Tempo_Acomodacao(pid, ma=True) + 0.5
 
@@ -220,4 +243,4 @@ def plot_pid(X,pid):
   erro.append(p2)
   erro.append(Medidas.Overshoot(pid = pid, particula = X))
 
-  pid.plot_MF(y,erro,T,temp_plot = temp_plot)
+  pid.plot_MF(y, erro, T, temp_plot = temp_plot, fim=fim)

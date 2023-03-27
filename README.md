@@ -1,5 +1,5 @@
 # PSO to Improve PID Controller - Scientific Initiation
-A research about use PSO (Particle Swarm Optimization) and other optimization functions to tuning a PID (Proportional, Integral, Derivative) controller.
+Sintonização de controlador PID utilizando PSO (Particle Swarm Optimization).
 
 ## PID Controller
 

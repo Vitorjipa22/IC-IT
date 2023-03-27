@@ -1,15 +1,19 @@
 import control as ctl
+import matlab
+import matlab.engine
 import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import time
 
 class PID:
-  def __init__(self, num, den, gama = 1/8, temp_simu = 20, set_point = 1.0, amostragem = 0.001):
-
-    self.temp_simu = temp_simu
-    self.gama = gama
-    self.amostragem = amostragem
-    self.set_point = set_point
-    self.pontos_simu = np.arange(0,temp_simu,self.amostragem)
+  # def __init__(self, num, den, gama = 1/8, temp_simu = 20, set_point = 1.0, amostragem = 0.001):
+  def __init__(self, num, den):
+    self.temp_simu = 20
+    self.gama = 1/8
+    self.amostragem = 0.001
+    self.set_point = 1.0
+    self.pontos_simu = np.arange(0,self.temp_simu+0.001,self.amostragem)
 
     self.numerador = num
     self.denominador = den
@@ -19,34 +23,55 @@ class PID:
 
     self.T_ma, self.yout_ma = ctl.step_response(self.G_s, self.pontos_simu)
     self.error = [self.set_point]*len(self.T_ma) - self.yout_ma
+
+    self.temp = 20
+
+    self.eng = matlab.engine.start_matlab()
     
   def resposta_MF(self,P,I,D):
+    timeini = time.time()
+    self.P = str(P)
+    self.I = str(I)
+    self.D = str(D)
 
-    self.P = P
-    self.I = I
-    self.D = D
+    self.eng.eval('Ti =' + self.I + ';',nargout=0)
+    self.eng.eval('Td =' + self.D + ';',nargout=0)
+    self.eng.eval('Kp =' + self.P + ';',nargout=0)
+    self.eng.eval('gama = 1/8;',nargout=0)
+    self.eng.eval('num =' + str(self.numerador) + ';',nargout=0)
+    self.eng.eval('den =' + str(self.denominador) + ';',nargout=0)
+    self.eng.eval('Temp =' + str(self.temp) + ';',nargout=0)
 
-    # print("P: ",P)
-    # print("I: ",I)
-    # print("D: ",D)
+    self.eng.GetRealTimeData(nargout = 0)
 
-    num_ctl = [self.P*((self.gama*self.I*self.D) + (self.I*self.D)), self.P*(self.I+(self.gama*self.D)), self.P]
-    den_ctl = [self.I*self.D*self.gama, self.I,0]
+    self.time_sys = np.arange(0,20.001,0.001)
 
-    self.Cs_mf = ctl.tf(num_ctl, den_ctl)
-    self.Gs_mf = ctl.series(self.Cs_mf, self.G_s)
-    self.Ts_mf = ctl.feedback(self.Gs_mf, self.H_s, sign=-1)
-    self.T_mf, self.yout_mf = ctl.step_response(self.Ts_mf, self.pontos_simu)
+    self.out = self.eng.workspace['out']
+    self.out = np.array(self.out)
 
-    self.error_mf = [self.set_point]*len(self.T_mf) - self.yout_mf
+    self.ITAE = self.out[:,0]
+    self.ITAE = self.ITAE[-1]
 
-    return self.yout_mf, self.error_mf, self.T_mf
+    self.ITSE = self.out[:,1]
+    self.ITSE = self.ITSE[-1]
 
+    self.ISE = self.out[:,2]
+    self.ISE = self.ISE[-1]
+
+    self.IAE = self.out[:,3]
+    self.IAE = self.IAE[-1]
+
+    self.Y = self.out[:,4]
+    timefim = time.time()
+    # print(timefim-timeini)
+
+    return self.Y, self.ITAE, self.ITSE, self.ISE, self.IAE, self.time_sys
+  
   def resposta_MA(self):
 
     return self.yout_ma, self.error, self.T_ma
 
-  def plot_MF(self, Y, erro, T, temp_plot = 20, figsize = (15,7), set_point = False):
+  def plot_MF(self, Y, erro, T, temp_plot = 20, figsize = (15,7), set_point = False, fim = False):
 
     
     pontos_pl = int((temp_plot * len(self.pontos_simu))/(self.temp_simu))
@@ -73,12 +98,14 @@ class PID:
     plt.grid(True,linewidth=0.4)
     plt.title('Controlador PID')
     
-    plt.text((pontos_pl*1.3)/len(self.pontos_simu),-0.045,f'P:{self.P:,.3f}      I:{self.I:,.3f}      D:{self.D:,.3f}      ERRO:{erro[0]:,.5f}      IAE {erro[1]:,.5f}      ITSE {erro[2]:,.5f}',fontsize = 12, fontname = 'monospace', color = '#3F9C6B')
+    plt.text((pontos_pl*1.3)/len(self.pontos_simu),-0.045,f'P:{float(self.P):,.3f}      I:{float(self.I):,.3f}      D:{float(self.D):,.3f}      ERRO:{erro[0]:,.5f}      IAE {erro[1]:,.5f}      ITSE {erro[2]:,.5f}',fontsize = 12, fontname = 'monospace', color = '#3F9C6B')
 
     if set_point:
       plt.plot(self.T_mf, [self.set_point]*len(self.T_mf), linewidth = 1.2, label = 'Setpoint')
 
     plt.legend(loc = 'center right')
+    if fim:
+      plt.savefig('gbest.png')
     plt.show()
 
   def plot_MA(self, Y, T, erro):
@@ -137,7 +164,9 @@ if __name__ == "__main__":
 
     # pid para exemplo de plot em maha aberta
 
-    Y,E, T = pid.resposta_MA()
+    # Y,E, T = pid.resposta_MA()
 
-    pid.plot_MA(Y, T, erro=E)
+    # pid.plot_MA(Y, T, erro=E)
+    out, erro, temp = pid.resposta_MF(1.0,1.0,1.0)
+
 
