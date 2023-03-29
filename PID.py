@@ -68,12 +68,20 @@ class PID:
     return self.Y, self.ITAE, self.ITSE, self.ISE, self.IAE, self.time_sys
   
   def resposta_MA(self):
+    Y = self.yout_ma
+
+    for i in range(len(Y)):
+      if Y[i] >= (Y[-1] + 0.02) or Y[i] <= (Y[-1] - 0.02):
+        last_point = i
+
+    temp_acom = self.T_ma[last_point]
+
+    self.set_TACO_MA(temp_acom)
 
     return self.yout_ma, self.error, self.T_ma
 
   def plot_MF(self, Y, erro, T, i, temp_plot = 20, figsize = (15,7), set_point = False, save = True):
 
-    
     pontos_pl = int((temp_plot * len(self.pontos_simu))/(self.temp_simu))
 
     Y = Y[:pontos_pl]
@@ -82,23 +90,23 @@ class PID:
     plt.figure(figsize = figsize)
     plt.plot(T, Y, linewidth = 1.2,label = 'Saida do controlador')
 
+    if temp_plot >= erro[2]:
+      plt.vlines(x = erro[2], ymin = 0, ymax = max(Y), colors = 'purple', label = 'tempo de acomodação', linewidth = 1.2, linestyle = ':')
+
     if temp_plot > erro[3]:
-      plt.vlines(x = erro[3], ymin = 0, ymax = max(Y), colors = 'purple', label = 'tempo de acomodação', linewidth = 1.2, linestyle = ':')
+      plt.vlines(x = erro[3], ymin = 0, ymax = max(Y), colors = 'black', label = f'5% do setpoint', linewidth = 1.2, linestyle = ':') 
 
     if temp_plot > erro[4]:
-      plt.vlines(x = erro[4], ymin = 0, ymax = max(Y), colors = 'black', label = f'5% do setpoint', linewidth = 1.2, linestyle = ':') 
-
-    if temp_plot > erro[5]:
-      plt.vlines(x = erro[5], ymin = 0, ymax = max(Y), colors = 'black', label = f'95% do setpoint', linewidth = 1.2, linestyle = ':')
+      plt.vlines(x = erro[4], ymin = 0, ymax = max(Y), colors = 'black', label = f'95% do setpoint', linewidth = 1.2, linestyle = ':')
 
     plt.axhline(y = Y[-1] + 0.02, color = 'b', linestyle = ':', label = 'Margens do tempo de acomodação')
     plt.axhline(y = Y[-1] - 0.02, color = 'b', linestyle = ':')
-    plt.axhline(y = erro[6], color = 'yellow', linestyle = ':', label = 'Overshoot')
+    plt.axhline(y = erro[5], color = 'yellow', linestyle = ':', label = 'Overshoot')
 
     plt.grid(True,linewidth=0.4)
     plt.title('Controlador PID')
     
-    plt.text((pontos_pl*1.3)/len(self.pontos_simu),-0.045,f'P:{float(self.P):,.3f}      I:{float(self.I):,.3f}      D:{float(self.D):,.3f}      ERRO:{erro[0]:,.5f}      IAE {erro[1]:,.5f}      ITSE {erro[2]:,.5f}',fontsize = 12, fontname = 'monospace', color = '#3F9C6B')
+    plt.text((pontos_pl*1.3)/len(self.pontos_simu),-0.045,f'P:{float(self.P):,.3f}      I:{float(self.I):,.3f}      D:{float(self.D):,.3f}      ERRO:{erro[0]:,.5f}      ITSE {erro[1]:,.5f}      TACO {erro[2]:,.5f}',fontsize = 12, fontname = 'monospace', color = '#3F9C6B')
 
     if set_point:
       plt.plot(self.T_mf, [self.set_point]*len(self.T_mf), linewidth = 1.2, label = 'Setpoint')
@@ -128,15 +136,9 @@ class PID:
     plt.axhline(y = erro[1], color = 'yellow', linestyle = ':', label = 'Overshoot')
 
     plt.grid(True,linewidth=0.4)
-    plt.title('Controlador PID')
+    plt.title('Sistema de Malha Aberta')
     plt.savefig('resultados\malha_aberta.png')
     plt.show()
-
-  def set_ISE_MA(self, ISE_MA):
-    self.ISE_MA = ISE_MA
-
-  def get_ISE_MA(self):
-    return self.ISE_MA
 
   def set_TACO_MA(self, TACO_MA):
     self.TACO_MA = TACO_MA
@@ -167,6 +169,6 @@ if __name__ == "__main__":
     # Y,E, T = pid.resposta_MA()
 
     # pid.plot_MA(Y, T, erro=E)
-    out, erro, temp = pid.resposta_MF(1.0,1.0,1.0)
+    _,_,_,_,_,_ = pid.resposta_MF(100.0,0.1,0.1)
 
 
