@@ -1,5 +1,4 @@
 # PSO to Improve PID Controller - Scientific Initiation
-# Particle Swarm Optimization (PSO) for PID Controller
 
 This project provides an implementation of Particle Swarm Optimization (PSO) to improve a PID Controller for a given system.
 
